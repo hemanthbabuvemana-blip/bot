@@ -1,0 +1,66 @@
+# 🔹 ACTMS_Python Replit Setup Prompt
+
+# 1️⃣ Install required packages
+pip install flask pandas scikit-learn web3 spacy
+
+# 2️⃣ Create folder structure
+mkdir -p ACTMS_Python/backend/routes
+mkdir -p ACTMS_Python/backend/services
+mkdir -p ACTMS_Python/backend/models
+mkdir -p ACTMS_Python/contracts
+mkdir -p ACTMS_Python/analytics
+mkdir -p ACTMS_Python/chatbot
+mkdir -p ACTMS_Python/static/css
+mkdir -p ACTMS_Python/blockchain
+
+# 3️⃣ Create backend starter files
+touch ACTMS_Python/backend/app.py
+touch ACTMS_Python/backend/routes/tenders.py
+touch ACTMS_Python/backend/routes/bids.py
+touch ACTMS_Python/backend/routes/ai_alerts.py
+touch ACTMS_Python/backend/routes/chatbot.py
+touch ACTMS_Python/backend/services/ml_service.py
+touch ACTMS_Python/backend/services/nlp_service.py
+touch ACTMS_Python/backend/services/audit_service.py
+touch ACTMS_Python/backend/services/blockchain_service.py
+touch ACTMS_Python/backend/models/db_schema.py
+
+# 4️⃣ Create contracts starter files
+touch ACTMS_Python/contracts/Tender.sol
+touch ACTMS_Python/contracts/Bid.sol
+touch ACTMS_Python/contracts/Tender_abi.json
+
+# 5️⃣ Create analytics starter files
+touch ACTMS_Python/analytics/anomaly_detection.py
+touch ACTMS_Python/analytics/dashboard.ipynb
+
+# 6️⃣ Create chatbot starter files
+touch ACTMS_Python/chatbot/faqs.json
+touch ACTMS_Python/chatbot/chatbot_engine.py
+
+# 7️⃣ Create frontend files
+touch ACTMS_Python/static/index.html
+touch ACTMS_Python/static/css/style.css
+
+# 8️⃣ Create blockchain files
+touch ACTMS_Python/blockchain/deploy.py
+touch ACTMS_Python/blockchain/local_testnet.json
+
+# 9️⃣ Create README
+touch ACTMS_Python/README.md
+
+# 10️⃣ Starter content for app.py
+cat <<EOL > ACTMS_Python/backend/app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Welcome to ACTMS Python Hackathon MVP!"
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=3000, debug=True)
+EOL
+
+echo "✅ ACTMS_Python structure created! Navigate to ACTMS_Python/backend and run: python app.py"
