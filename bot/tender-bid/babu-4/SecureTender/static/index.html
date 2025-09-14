@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTMS - Anti-Corruption Tender Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(51, 65, 85, 0.3);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: -280px;
+            top: 0;
+            z-index: 1000;
+            transition: left 0.3s ease;
+        }
+        
+        .sidebar.show {
+            left: 0;
+        }
+        
+        .sidebar-trigger {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 20px;
+            height: 100vh;
+            z-index: 999;
+            background: transparent;
+        }
+        
+        .main-content {
+            margin-left: 0;
+            flex: 1;
+            padding: 32px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .main-content.sidebar-open {
+            margin-left: 280px;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 32px;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: #94a3b8;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.1));
+            color: #ffffff;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .page-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        .page-title {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .page-subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 18px;
+            margin-bottom: 32px;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+            margin-bottom: 32px;
+            justify-content: center;
+        }
+        
+        .tab-button {
+            padding: 16px 32px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button:hover {
+            color: #e2e8f0;
+        }
+        
+        .tab-button.active {
+            color: #ffffff;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(51, 65, 85, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(51, 65, 85, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .alert-high { color: #ef4444; }
+        .alert-medium { color: #f59e0b; }
+        .alert-low { color: #10b981; }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .table th,
+        .table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+        }
+        
+        .table th {
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .file-upload {
+            border: 2px dashed rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .chat-container {
+            display: flex;
+            gap: 24px;
+            height: 600px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        .chat-sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .message.agent {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .message.user {
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 4px solid #8b5cf6;
+            margin-left: 48px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <!-- Sidebar hover trigger -->
+    <div class="sidebar-trigger"></div>
+    
+    <div class="sidebar">
+        <div class="logo">ACTMS</div>
+        <nav>
+            <a href="#" class="nav-item active" onclick="showPage('home')">Home</a>
+            <a href="#" class="nav-item" onclick="showPage('dashboard')">Dashboard</a>
+            <a href="#" class="nav-item" onclick="showPage('tender-management')">Tender Management</a>
+            <a href="#" class="nav-item" onclick="showPage('bid-submission')">Bid Submission</a>
+            <a href="#" class="nav-item" onclick="showPage('ai-analysis')">AI Analysis</a>
+            <a href="#" class="nav-item" onclick="showPage('chatbot')">Chatbot</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Home Page -->
+        <div id="home" class="page-content active">
+            <h1 class="page-title">Anti-Corruption Tender Management System</h1>
+            <p class="page-subtitle">A comprehensive solution for transparent tender processes.</p>
+            
+            <div class="card">
+                <h2 style="font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">What we can do</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px;">
+                    <div class="stat-card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Tender Management</h3>
+                        <p style="color: #94a3b8; line-height: 1.6;">Upload, manage, and track tender documents with ease and security.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Bid Submission</h3>
+                        <p style="color: #94a3b8; line-height: 1.6;">Streamline the process of submitting bids with automated validation.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">AI Analysis</h3>
+                        <p style="color: #94a3b8; line-height: 1.6;">Leverage powerful AI to detect suspicious patterns and anomalies in bids.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Chatbot</h3>
+                        <p style="color: #94a3b8; line-height: 1.6;">Get instant, AI-powered assistance and answers to your questions.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Dashboard</h3>
+                        <p style="color: #94a3b8; line-height: 1.6;">Gain insights with a comprehensive dashboard and real-time analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page-content">
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">A comprehensive overview of tender and bid analytics.</p>
+            
+            <div class="tab-container">
+                <button class="tab-button active" onclick="openTab('dashboard', 'overview')">Overview</button>
+                <button class="tab-button" onclick="openTab('dashboard', 'financial-analysis')">Financial Analysis</button>
+                <button class="tab-button" onclick="openTab('dashboard', 'security-insights')">Security Insights</button>
+                <button class="tab-button" onclick="openTab('dashboard', 'operational-metrics')">Operational Metrics</button>
+                <button class="tab-button" onclick="openTab('dashboard', 'system-admin')">System Admin</button>
+            </div>
+
+            <div id="overview" class="tab-content active">
+                <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Key Performance Indicators</h2>
+                <div class="stats-grid" id="dashboard-stats">
+                    <!-- Stats will be loaded here -->
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Tender Status Distribution</h3>
+                        <div style="height: 200px; position: relative;">
+                            <canvas id="tender-status-chart" style="width: 100%; height: 100%;"></canvas>
+                            <div id="tender-status-placeholder" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                                Loading tender status chart...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Bid Amount Distribution</h3>
+                        <div style="height: 200px; position: relative;">
+                            <canvas id="bid-amount-chart" style="width: 100%; height: 100%;"></canvas>
+                            <div id="bid-amount-placeholder" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                                Loading bid amount chart...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="financial-analysis" class="tab-content">
+                <div class="card">
+                    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Financial Analysis</h2>
+                    <p style="color: #94a3b8; margin-bottom: 24px;">Comprehensive financial insights and tender value analysis.</p>
+                    <div style="height: 400px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        Financial Analysis Dashboard - Coming Soon
+                    </div>
+                </div>
+            </div>
+
+            <div id="security-insights" class="tab-content">
+                <div class="card">
+                    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Security Insights</h2>
+                    <p style="color: #94a3b8; margin-bottom: 24px;">Security metrics and threat analysis dashboard.</p>
+                    <div style="height: 400px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        Security Insights Dashboard - Coming Soon
+                    </div>
+                </div>
+            </div>
+
+            <div id="operational-metrics" class="tab-content">
+                <div class="card">
+                    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Operational Metrics</h2>
+                    <p style="color: #94a3b8; margin-bottom: 24px;">System performance and operational analytics.</p>
+                    <div style="height: 400px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        Operational Metrics Dashboard - Coming Soon
+                    </div>
+                </div>
+            </div>
+
+            <div id="system-admin" class="tab-content">
+                <div class="card">
+                    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">System Admin</h2>
+                    <p style="color: #94a3b8; margin-bottom: 24px;">Administrative controls and system management.</p>
+                    <div style="height: 400px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        System Administration Panel - Coming Soon
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tender Management Page -->
+        <div id="tender-management" class="page-content">
+            <h1 class="page-title">Tender Management</h1>
+            <p class="page-subtitle">Upload, view, and manage tender documents with automated information extraction.</p>
+            
+            <div class="tab-container">
+                <button class="tab-button active" onclick="openTab('tender-management', 'upload-tender')">Upload New Tender</button>
+                <button class="tab-button" onclick="openTab('tender-management', 'view-tenders')">View Tenders</button>
+                <button class="tab-button" onclick="openTab('tender-management', 'tender-analytics')">Tender Analytics</button>
+            </div>
+
+            <div id="upload-tender" class="tab-content active">
+                <h2 style="color: #10b981; font-size: 24px; font-weight: 600; margin-bottom: 24px;">Upload New Tender</h2>
+                <div class="card">
+                    <form id="tender-form" onsubmit="submitTender(event)">
+                        <div class="form-group">
+                            <label class="form-label">Tender Title</label>
+                            <input type="text" name="title" class="form-input" placeholder="Enter a descriptive title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-input" rows="6" placeholder="Provide detailed tender requirements" required></textarea>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                            <div class="form-group">
+                                <label class="form-label">Department</label>
+                                <select name="department" class="form-input" required>
+                                    <option value="">Select Department...</option>
+                                    <option value="Infrastructure">Infrastructure</option>
+                                    <option value="IT & Technology">IT & Technology</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Transportation">Transportation</option>
+                                    <option value="Defense">Defense</option>
+                                    <option value="Energy">Energy</option>
+                                    <option value="Environment">Environment</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Estimated Value ($)</label>
+                                <input type="number" name="estimated_value" class="form-input" placeholder="e.g., 500000" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Deadline</label>
+                            <input type="date" name="deadline" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Upload Documents</label>
+                            <div class="file-upload" onclick="document.getElementById('file-input').click()">
+                                <input type="file" id="file-input" name="file" accept=".pdf,.doc,.docx,.txt,.rtf" style="display: none;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+                                <p style="color: #3b82f6; font-weight: 600; margin-bottom: 8px;">Upload a file or drag and drop</p>
+                                <p style="color: #64748b; font-size: 14px;">PDF, DOCX, or TXT up to 10MB</p>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 32px;">
+                            <button type="submit" class="btn-primary">Submit Tender</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="view-tenders" class="tab-content">
+                <h2 style="color: #3b82f6; font-size: 24px; font-weight: 600; margin-bottom: 24px;">View Tenders</h2>
+                <div class="card">
+                    <div id="tenders-list">
+                        <!-- Tenders table will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="tender-analytics" class="tab-content">
+                <h2 style="color: #f59e0b; font-size: 24px; font-weight: 600; margin-bottom: 24px;">Tender Analytics</h2>
+                <div class="card">
+                    <div style="height: 400px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        Tender Analytics Dashboard - Coming Soon
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bid Submission Page -->
+        <div id="bid-submission" class="page-content">
+            <h1 class="page-title">Bid Submission</h1>
+            <p class="page-subtitle">Submit your bid securely for active tenders.</p>
+            
+            <div class="card">
+                <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Bid Details</h2>
+                <form id="bid-form" onsubmit="submitBid(event)">
+                    <div class="form-group">
+                        <label class="form-label">Tender ID</label>
+                        <select name="tender_id" id="tender-select" class="form-input" required>
+                            <option value="">Select a tender...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" name="company_name" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Contact Person</label>
+                        <input type="text" name="contact_email" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Bid Amount ($)</label>
+                        <input type="number" name="bid_amount" class="form-input" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Proposal</label>
+                        <textarea name="proposal" class="form-input" rows="6" placeholder="Describe your proposal and approach" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Upload Bid Document</label>
+                        <div class="file-upload" onclick="document.getElementById('bid-file-input').click()">
+                            <input type="file" id="bid-file-input" name="bid_file" accept=".pdf,.doc,.docx,.txt,.rtf" style="display: none;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+                            <p style="color: #3b82f6; font-weight: 600; margin-bottom: 8px;">Upload a file or drag and drop</p>
+                            <p style="color: #64748b; font-size: 14px;">PDF, DOCX, or TXT up to 15MB</p>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 32px;">
+                        <button type="submit" class="btn-primary">Submit Bid</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- AI Analysis Page -->
+        <div id="ai-analysis" class="page-content">
+            <h1 class="page-title">AI Analysis</h1>
+            <p class="page-subtitle">Automated detection of suspicious activities and anomalies.</p>
+            
+            <div class="tab-container">
+                <button class="tab-button active" onclick="openTab('ai-analysis', 'real-time-alerts')">Real-time Alerts</button>
+                <button class="tab-button" onclick="openTab('ai-analysis', 'anomaly-dashboard')">Anomaly Dashboard</button>
+                <button class="tab-button" onclick="openTab('ai-analysis', 'model-training')">Model Training</button>
+                <button class="tab-button" onclick="openTab('ai-analysis', 'pattern-analysis')">Pattern Analysis</button>
+            </div>
+
+            <div id="real-time-alerts" class="tab-content active">
+                <h2 style="color: #ef4444; font-size: 24px; font-weight: 600; margin-bottom: 24px;">🚨 Real-time Alerts</h2>
+                
+                <!-- Alert Filters -->
+                <div style="display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Filter by Severity</label>
+                        <select id="severity-filter" class="form-input" onchange="filterAlerts()">
+                            <option value="All">All</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Filter by Type</label>
+                        <select id="type-filter" class="form-input" onchange="filterAlerts()">
+                            <option value="All">All</option>
+                            <option value="Suspicious Bid">Suspicious Bid</option>
+                            <option value="Unusual Pattern">Unusual Pattern</option>
+                            <option value="System Alert">System Alert</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: end;">
+                        <button class="btn-primary" onclick="loadAIAnalysis()" style="width: 100%;">🔄 Refresh Alerts</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div id="alerts-display">
+                        <!-- Detailed alerts display will be loaded here -->
+                    </div>
+                    
+                    <!-- Alert Statistics -->
+                    <div style="border-top: 1px solid rgba(51, 65, 85, 0.3); margin-top: 24px; padding-top: 24px;">
+                        <h3 style="color: #94a3b8; font-size: 18px; font-weight: 600; margin-bottom: 16px;">📊 Alert Statistics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;" id="alert-stats">
+                            <!-- Stats will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="anomaly-dashboard" class="tab-content">
+                <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">📊 Anomaly Detection Dashboard</h2>
+                
+                <!-- Anomaly Summary Stats -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;" id="anomaly-stats">
+                    <!-- Stats will be loaded here -->
+                </div>
+                
+                <!-- Visualizations -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="card">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📈 Anomaly Score Distribution</h3>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="anomaly-score-chart" style="width: 100%; height: 100%;"></canvas>
+                            <div id="anomaly-score-placeholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                                Chart will load when ML model is trained
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">⏰ Anomaly Scores Over Time</h3>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="anomaly-timeline-chart" style="width: 100%; height: 100%;"></canvas>
+                            <div id="anomaly-timeline-placeholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                                Chart will load when ML model is trained
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Suspicious Bids Analysis -->
+                <div id="suspicious-analysis" style="margin-top: 24px;">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <div id="model-training" class="tab-content">
+                <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">🤖 Machine Learning Model Training</h2>
+                
+                <!-- Model Status -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="card">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📊 Model Status</h3>
+                        <div id="model-status">
+                            <p><strong>Status:</strong> <span id="model-status-value">❌ Not Trained</span></p>
+                            <p><strong>Model Type:</strong> Isolation Forest</p>
+                            <p><strong>Contamination Rate:</strong> 10%</p>
+                            <p><strong>Number of Estimators:</strong> 100</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📋 Features Used</h3>
+                        <div id="model-features">
+                            <p>- Bid Amount</p>
+                            <p>- Proposal Length</p>
+                            <p>- Company Name Patterns</p>
+                            <p>- Submission Timing</p>
+                            <p>- Content Analysis</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Training Data Information -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📈 Training Data</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <div>
+                            <p class="stat-label">Total Bids Available</p>
+                            <p class="stat-value" id="total-bids-count" style="color: #3b82f6; font-size: 24px;">0</p>
+                        </div>
+                        <div>
+                            <p class="stat-label">Minimum Required</p>
+                            <p class="stat-value" style="color: #f59e0b; font-size: 24px;">10</p>
+                        </div>
+                        <div>
+                            <p class="stat-label">Training Ready</p>
+                            <p class="stat-value" id="training-ready" style="color: #ef4444; font-size: 24px;">❌ No</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Training Controls -->
+                <div class="card">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🎯 Model Training Controls</h3>
+                    <div id="training-controls">
+                        <div id="insufficient-data-warning" style="display: none;">
+                            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                                <p style="color: #f59e0b; margin: 0;">⚠️ Need at least 10 bids to train the model. Submit more bids through the 'Bid Submission' page to enable model training.</p>
+                            </div>
+                        </div>
+                        <div id="training-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <button class="btn-primary" onclick="trainModel()" disabled id="train-button">🚀 Train/Retrain Model</button>
+                            <button class="btn-secondary" onclick="testModelPerformance()" disabled id="test-button">🔍 Test Model Performance</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Model Performance Metrics -->
+                <div id="performance-metrics" class="card" style="margin-top: 24px; display: none;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📊 Model Performance Metrics</h3>
+                    <div id="performance-content">
+                        <!-- Performance metrics will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="pattern-analysis" class="tab-content">
+                <div class="card">
+                    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Pattern Analysis</h2>
+                    <div style="height: 400px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        Pattern Analysis Dashboard - Coming Soon
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Page -->
+        <div id="chatbot" class="page-content">
+            <h1 class="page-title">Chatbot</h1>
+            <p class="page-subtitle">Get instant, AI-powered assistance and answers to your questions.</p>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message agent">
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: 600;">A</div>
+                            <strong style="color: #3b82f6;">Agent</strong>
+                        </div>
+                        <p>Hello! I am your AI assistant. How can I help you with tender management today?</p>
+                    </div>
+                </div>
+                
+                <div class="chat-sidebar">
+                    <div class="card">
+                        <h3 style="color: #10b981; font-size: 18px; font-weight: 600; margin-bottom: 16px;">🚀 Quick Actions</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button class="btn-secondary" onclick="handleQuickAction('Tender Management')">Tender Management</button>
+                            <button class="btn-secondary" onclick="handleQuickAction('Bid Submission')">Bid Submission</button>
+                            <button class="btn-secondary" onclick="handleQuickAction('AI Analysis')">AI Analysis</button>
+                            <button class="btn-secondary" onclick="handleQuickAction('System Documentation')">System Documentation</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="color: #ec4899; font-size: 18px; font-weight: 600; margin-bottom: 16px;">💡 Suggested Questions</h3>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <div style="background: rgba(59, 130, 246, 0.1); border-radius: 8px; overflow: hidden;">
+                                <div style="padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleSuggestedCategory('tender-questions')">
+                                    <span style="color: #3b82f6; font-weight: 600;">📋 Tender Management</span>
+                                    <span id="tender-questions-arrow" style="font-size: 16px; transition: transform 0.3s;">▼</span>
+                                </div>
+                                <div id="tender-questions" style="display: none; padding: 12px; padding-top: 0;">
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('How do I upload a new tender?')" style="font-size: 12px; padding: 8px;">How do I upload a new tender?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('What information is extracted from tender documents?')" style="font-size: 12px; padding: 8px;">What information is extracted from tender documents?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('How do I set a tender deadline?')" style="font-size: 12px; padding: 8px;">How do I set a tender deadline?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('Can I edit a tender after submission?')" style="font-size: 12px; padding: 8px;">Can I edit a tender after submission?</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <div style="background: rgba(139, 92, 246, 0.1); border-radius: 8px; overflow: hidden;">
+                                <div style="padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleSuggestedCategory('bid-questions')">
+                                    <span style="color: #8b5cf6; font-weight: 600;">📝 Bid Submission</span>
+                                    <span id="bid-questions-arrow" style="font-size: 16px; transition: transform 0.3s;">▼</span>
+                                </div>
+                                <div id="bid-questions" style="display: none; padding: 12px; padding-top: 0;">
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('How do I submit a bid?')" style="font-size: 12px; padding: 8px;">How do I submit a bid?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('What makes a bid suspicious?')" style="font-size: 12px; padding: 8px;">What makes a bid suspicious?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('How is my proposal analyzed?')" style="font-size: 12px; padding: 8px;">How is my proposal analyzed?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('Can I withdraw a submitted bid?')" style="font-size: 12px; padding: 8px;">Can I withdraw a submitted bid?</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div style="background: rgba(236, 72, 153, 0.1); border-radius: 8px; overflow: hidden;">
+                                <div style="padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleSuggestedCategory('ai-questions')">
+                                    <span style="color: #ec4899; font-weight: 600;">🔍 AI Analysis</span>
+                                    <span id="ai-questions-arrow" style="font-size: 16px; transition: transform 0.3s;">▼</span>
+                                </div>
+                                <div id="ai-questions" style="display: none; padding: 12px; padding-top: 0;">
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('How does the AI detection work?')" style="font-size: 12px; padding: 8px;">How does the AI detection work?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('What is an anomaly score?')" style="font-size: 12px; padding: 8px;">What is an anomaly score?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('How can I improve my bid score?')" style="font-size: 12px; padding: 8px;">How can I improve my bid score?</button>
+                                        <button class="btn-secondary" onclick="sendSuggestedQuestion('What triggers a suspicious bid alert?')" style="font-size: 12px; padding: 8px;">What triggers a suspicious bid alert?</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="color: #f59e0b; font-size: 18px; font-weight: 600; margin-bottom: 16px;">📊 System Overview</h3>
+                        <div id="system-overview">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Active Tenders:</span>
+                                <span id="overview-tenders" style="font-weight: 600;">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Total Bids:</span>
+                                <span id="overview-bids" style="font-weight: 600;">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                <span>Active Alerts:</span>
+                                <span id="overview-alerts" style="font-weight: 600;">0</span>
+                            </div>
+                            <div id="system-status" style="padding: 8px; border-radius: 6px; text-align: center; font-weight: 600;">
+                                ✅ All systems normal
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="color: #64748b; font-size: 18px; font-weight: 600; margin-bottom: 16px;">🛠️ Chat Controls</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button class="btn-secondary" onclick="clearChatHistory()" style="font-size: 12px;">🗑️ Clear Chat History</button>
+                            <button class="btn-secondary" onclick="exportChatHistory()" style="font-size: 12px;">💾 Export Chat</button>
+                        </div>
+                        
+                        <div id="chat-statistics" style="margin-top: 16px; display: none;">
+                            <div style="background: rgba(51, 65, 85, 0.3); border-radius: 6px; padding: 12px;">
+                                <h4 style="margin: 0 0 8px 0; color: #94a3b8; font-size: 14px;">📈 Chat Statistics</h4>
+                                <div style="font-size: 12px; color: #94a3b8;">
+                                    <div>Your messages: <span id="user-message-count">0</span></div>
+                                    <div>Assistant responses: <span id="assistant-message-count">0</span></div>
+                                    <div>Total exchanges: <span id="total-exchanges">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="chat-form" onsubmit="sendMessage(event)" style="margin-top: 24px;">
+                <div style="display: flex; gap: 16px;">
+                    <input type="text" id="chat-input" placeholder="Type your message..." class="form-input" style="flex: 1;" required>
+                    <button type="submit" class="btn-primary">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '';
+        
+        // Current state
+        let currentPage = 'home';
+        
+        // Sidebar hover functionality
+        function initializeSidebarHover() {
+            const sidebar = document.querySelector('.sidebar');
+            const trigger = document.querySelector('.sidebar-trigger');
+            const mainContent = document.querySelector('.main-content');
+            let isHovering = false;
+            
+            // Show sidebar when hovering over trigger or sidebar itself
+            function showSidebar() {
+                if (!isHovering) {
+                    isHovering = true;
+                    sidebar.classList.add('show');
+                    mainContent.classList.add('sidebar-open');
+                }
+            }
+            
+            // Hide sidebar when leaving both trigger and sidebar
+            function hideSidebar() {
+                setTimeout(() => {
+                    if (!isHovering) {
+                        sidebar.classList.remove('show');
+                        mainContent.classList.remove('sidebar-open');
+                    }
+                }, 100);
+            }
+            
+            // Trigger events
+            trigger.addEventListener('mouseenter', showSidebar);
+            trigger.addEventListener('mouseleave', () => {
+                isHovering = false;
+                hideSidebar();
+            });
+            
+            // Sidebar events
+            sidebar.addEventListener('mouseenter', () => {
+                isHovering = true;
+            });
+            
+            sidebar.addEventListener('mouseleave', () => {
+                isHovering = false;
+                hideSidebar();
+            });
+        }
+        
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardStats();
+            loadTenders();
+            loadTendersForBidding();
+            initializeChat();
+            initializeSidebarHover();
+        });
+        
+        // Navigation functions
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentPage = pageId;
+            
+            // Load page-specific data
+            if (pageId === 'dashboard') {
+                loadDashboardStats();
+            } else if (pageId === 'tender-management') {
+                loadTenders();
+            } else if (pageId === 'bid-submission') {
+                loadTendersForBidding();
+            } else if (pageId === 'ai-analysis') {
+                loadAIAnalysis();
+            }
+        }
+        
+        // Tab functions
+        function openTab(pageId, tabId) {
+            // Hide all tab contents for this page
+            document.querySelectorAll(`#${pageId} .tab-content`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update tab buttons for this page
+            document.querySelectorAll(`#${pageId} .tab-button`).forEach(button => {
+                button.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard`);
+                const data = await response.json();
+                
+                const statsHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Total Tenders</div>
+                        <div class="stat-value" style="color: #3b82f6;">${data.total_tenders || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Tenders</div>
+                        <div class="stat-value" style="color: #10b981;">${data.active_tenders || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Bids</div>
+                        <div class="stat-value" style="color: #8b5cf6;">${data.total_bids || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">AI Alerts</div>
+                        <div class="stat-value" style="color: #ef4444;">${data.total_alerts || 0}</div>
+                    </div>
+                `;
+                
+                const statsContainer = document.getElementById('dashboard-stats');
+                if (statsContainer) {
+                    statsContainer.innerHTML = statsHTML;
+                }
+                
+                // Load and render dashboard charts
+                loadDashboardCharts();
+                
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Fallback display
+                const statsContainer = document.getElementById('dashboard-stats');
+                if (statsContainer) {
+                    statsContainer.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading dashboard statistics</p>';
+                }
+            }
+        }
+        
+        // Chart instances for dashboard charts
+        let tenderStatusChart = null;
+        let bidAmountChart = null;
+        
+        // Load and render dashboard charts
+        async function loadDashboardCharts() {
+            try {
+                const [tendersResponse, bidsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/tenders`),
+                    fetch(`${API_BASE}/api/bids`)
+                ]);
+                
+                const tenders = await tendersResponse.json();
+                const bids = await bidsResponse.json();
+                
+                renderTenderStatusChart(tenders);
+                renderBidAmountChart(bids);
+                
+            } catch (error) {
+                console.error('Error loading dashboard charts:', error);
+            }
+        }
+        
+        // Render tender status distribution chart
+        function renderTenderStatusChart(tenders) {
+            const ctx = document.getElementById('tender-status-chart');
+            if (!ctx) return;
+            
+            try {
+                // Clean up existing chart
+                if (tenderStatusChart) {
+                    tenderStatusChart.destroy();
+                }
+                
+                // Count tenders by status
+                const statusCounts = {};
+                tenders.forEach(tender => {
+                    const status = tender.status || 'active';
+                    statusCounts[status] = (statusCounts[status] || 0) + 1;
+                });
+                
+                const labels = Object.keys(statusCounts);
+                const data = Object.values(statusCounts);
+                const colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                
+                tenderStatusChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels.map(label => label.charAt(0).toUpperCase() + label.slice(1)),
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors.slice(0, labels.length),
+                            borderWidth: 2,
+                            borderColor: '#1e293b'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#e2e8f0', padding: 20 }
+                            }
+                        }
+                    }
+                });
+                
+                // Hide placeholder
+                const placeholder = document.getElementById('tender-status-placeholder');
+                if (placeholder) placeholder.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error rendering tender status chart:', error);
+            }
+        }
+        
+        // Render bid amount distribution chart
+        function renderBidAmountChart(bids) {
+            const ctx = document.getElementById('bid-amount-chart');
+            if (!ctx) return;
+            
+            try {
+                // Clean up existing chart
+                if (bidAmountChart) {
+                    bidAmountChart.destroy();
+                }
+                
+                if (bids.length === 0) {
+                    return;
+                }
+                
+                // Create bid amount ranges
+                const amounts = bids.map(bid => bid.bid_amount);
+                const maxAmount = Math.max(...amounts);
+                const binSize = Math.ceil(maxAmount / 5); // 5 bins
+                
+                const bins = {};
+                amounts.forEach(amount => {
+                    const binIndex = Math.floor(amount / binSize);
+                    const binLabel = `$${(binIndex * binSize).toLocaleString()}-${((binIndex + 1) * binSize).toLocaleString()}`;
+                    bins[binLabel] = (bins[binLabel] || 0) + 1;
+                });
+                
+                bidAmountChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(bins),
+                        datasets: [{
+                            label: 'Number of Bids',
+                            data: Object.values(bins),
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e2e8f0' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Bid Amount Range',
+                                    color: '#e2e8f0'
+                                },
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Bids',
+                                    color: '#e2e8f0'
+                                },
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            }
+                        }
+                    }
+                });
+                
+                // Hide placeholder
+                const placeholder = document.getElementById('bid-amount-placeholder');
+                if (placeholder) placeholder.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error rendering bid amount chart:', error);
+            }
+        }
+        
+        // Load tenders
+        async function loadTenders() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tenders`);
+                const tenders = await response.json();
+                
+                if (tenders.length === 0) {
+                    document.getElementById('tenders-list').innerHTML = '<p style="text-align: center; color: #64748b; padding: 48px;">No tenders found. Create your first tender!</p>';
+                    return;
+                }
+                
+                const tableHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Department</th>
+                                <th>Value</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tenders.map(tender => `
+                                <tr>
+                                    <td style="font-weight: 600;">T-${tender.id}</td>
+                                    <td>${tender.title}</td>
+                                    <td>${tender.department}</td>
+                                    <td>$${tender.estimated_value.toLocaleString()}</td>
+                                    <td>${tender.deadline}</td>
+                                    <td>
+                                        <span style="background: ${tender.status === 'active' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(100, 116, 139, 0.2)'}; color: ${tender.status === 'active' ? '#10b981' : '#64748b'}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${tender.status}</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('tenders-list').innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading tenders:', error);
+            }
+        }
+        
+        // Load tenders for bidding
+        async function loadTendersForBidding() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tenders?status=active`);
+                const tenders = await response.json();
+                
+                const select = document.getElementById('tender-select');
+                if (select) {
+                    select.innerHTML = '<option value="">Select a tender...</option>';
+                    
+                    tenders.forEach(tender => {
+                        const option = document.createElement('option');
+                        option.value = tender.id;
+                        option.textContent = `T-${tender.id}: ${tender.title} (${tender.department})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading tenders for bidding:', error);
+            }
+        }
+        
+        // Store all alerts for filtering
+        let allAlerts = [];
+        
+        // Load AI analysis data
+        async function loadAIAnalysis() {
+            try {
+                const [suspiciousResponse, alertsResponse, bidsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/bids/suspicious`),
+                    fetch(`${API_BASE}/api/alerts`),
+                    fetch(`${API_BASE}/api/bids`)
+                ]);
+                
+                const suspiciousBids = await suspiciousResponse.json();
+                allAlerts = await alertsResponse.json();
+                const allBids = await bidsResponse.json();
+                
+                // Display alerts
+                displayAlerts(allAlerts);
+                
+                // Update alert statistics
+                updateAlertStatistics(allAlerts);
+                
+                // Update anomaly dashboard
+                updateAnomalyDashboard(allBids);
+                
+                // Update model training status
+                updateModelTrainingStatus(allBids);
+                
+            } catch (error) {
+                console.error('Error loading AI analysis:', error);
+            }
+        }
+        
+        // Display alerts with expandable format
+        function displayAlerts(alerts) {
+            const alertsDisplay = document.getElementById('alerts-display');
+            
+            if (alerts.length === 0) {
+                alertsDisplay.innerHTML = '<div style="text-align: center; color: #10b981; padding: 48px;">✅ No active alerts. System is running normally.</div>';
+                return;
+            }
+            
+            alertsDisplay.innerHTML = `
+                <p style="color: #ef4444; font-weight: 600; margin-bottom: 24px;">🚨 **${alerts.length} active alert(s) found**</p>
+                ${alerts.map((alert, index) => {
+                    const alertColor = alert.severity === 'high' ? '🔴' : alert.severity === 'medium' ? '🟡' : '🟢';
+                    const alertBg = alert.severity === 'high' ? 'rgba(239, 68, 68, 0.1)' : alert.severity === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+                    
+                    return `
+                        <div style="border: 1px solid rgba(51, 65, 85, 0.3); border-radius: 12px; margin-bottom: 16px; overflow: hidden;">
+                            <div style="background: ${alertBg}; padding: 16px; cursor: pointer;" onclick="toggleAlert('alert-${index}')">
+                                <div style="display: flex; justify-content: between; align-items: center;">
+                                    <div style="flex: 1;">
+                                        <h4 style="margin: 0; color: #e2e8f0;">${alertColor} ${alert.alert_type} - ${alert.severity.toUpperCase()} (ID: ${alert.id})</h4>
+                                    </div>
+                                    <div>
+                                        <span id="alert-${index}-arrow" style="font-size: 20px; transition: transform 0.3s;">▼</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="alert-${index}" style="display: none; padding: 24px; background: rgba(15, 23, 42, 0.6);">
+                                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 24px;">
+                                    <div>
+                                        <p><strong>Message:</strong> ${alert.message}</p>
+                                        <p><strong>Type:</strong> ${alert.alert_type}</p>
+                                        <p><strong>Severity:</strong> ${alert.severity.toUpperCase()}</p>
+                                        <p><strong>Created:</strong> ${new Date(alert.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                        ${alert.related_entity_type ? `<p><strong>Related:</strong> ${alert.related_entity_type.charAt(0).toUpperCase() + alert.related_entity_type.slice(1)} ID ${alert.related_entity_id}</p>` : ''}
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <button class="btn-secondary" onclick="investigateAlert(${alert.id})" style="font-size: 12px;">🔍 Investigate</button>
+                                        <button class="btn-secondary" onclick="resolveAlert(${alert.id})" style="font-size: 12px;">✅ Mark Resolved</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+        
+        // Toggle alert expansion
+        function toggleAlert(alertId) {
+            const alertContent = document.getElementById(alertId);
+            const arrow = document.getElementById(alertId + '-arrow');
+            
+            if (alertContent.style.display === 'none') {
+                alertContent.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                alertContent.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // Filter alerts based on severity and type
+        function filterAlerts() {
+            const severityFilter = document.getElementById('severity-filter').value;
+            const typeFilter = document.getElementById('type-filter').value;
+            
+            let filteredAlerts = allAlerts;
+            
+            if (severityFilter !== 'All') {
+                filteredAlerts = filteredAlerts.filter(alert => alert.severity === severityFilter);
+            }
+            
+            if (typeFilter !== 'All') {
+                filteredAlerts = filteredAlerts.filter(alert => alert.alert_type === typeFilter);
+            }
+            
+            displayAlerts(filteredAlerts);
+        }
+        
+        // Update alert statistics
+        function updateAlertStatistics(alerts) {
+            const highSeverity = alerts.filter(alert => alert.severity === 'high').length;
+            const mediumSeverity = alerts.filter(alert => alert.severity === 'medium').length;
+            const lowSeverity = alerts.filter(alert => alert.severity === 'low').length;
+            const totalAlerts = alerts.length;
+            
+            const alertStats = document.getElementById('alert-stats');
+            if (alertStats) {
+                alertStats.innerHTML = `
+                    <div>
+                        <p class="stat-label">High Severity</p>
+                        <p class="stat-value" style="color: #ef4444; font-size: 24px;">${highSeverity}</p>
+                    </div>
+                    <div>
+                        <p class="stat-label">Medium Severity</p>
+                        <p class="stat-value" style="color: #f59e0b; font-size: 24px;">${mediumSeverity}</p>
+                    </div>
+                    <div>
+                        <p class="stat-label">Low Severity</p>
+                        <p class="stat-value" style="color: #10b981; font-size: 24px;">${lowSeverity}</p>
+                    </div>
+                    <div>
+                        <p class="stat-label">Total Alerts</p>
+                        <p class="stat-value" style="color: #3b82f6; font-size: 24px;">${totalAlerts}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Chart instances for cleanup
+        let anomalyScoreChart = null;
+        let anomalyTimelineChart = null;
+        
+        // Update anomaly dashboard
+        function updateAnomalyDashboard(bids) {
+            const totalBids = bids.length;
+            const suspiciousBids = bids.filter(bid => bid.is_suspicious).length;
+            const normalBids = totalBids - suspiciousBids;
+            const avgAnomalyScore = bids.reduce((sum, bid) => sum + (bid.anomaly_score || 0), 0) / totalBids;
+            
+            const anomalyStats = document.getElementById('anomaly-stats');
+            if (anomalyStats) {
+                anomalyStats.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Total Bids Analyzed</div>
+                        <div class="stat-value" style="color: #3b82f6;">${totalBids}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Suspicious Bids</div>
+                        <div class="stat-value" style="color: #ef4444;">${suspiciousBids}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Normal Bids</div>
+                        <div class="stat-value" style="color: #10b981;">${normalBids}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Anomaly Score</div>
+                        <div class="stat-value" style="color: #8b5cf6;">${avgAnomalyScore.toFixed(3)}</div>
+                    </div>
+                `;
+            }
+            
+            // Render charts if we have data with anomaly scores
+            const bidsWithScores = bids.filter(bid => bid.anomaly_score !== null && bid.anomaly_score !== undefined);
+            if (bidsWithScores.length > 0) {
+                renderAnomalyScoreChart(bidsWithScores);
+                renderAnomalyTimelineChart(bidsWithScores);
+                
+                // Hide placeholders and show charts
+                const scorePlaceholder = document.getElementById('anomaly-score-placeholder');
+                const timelinePlaceholder = document.getElementById('anomaly-timeline-placeholder');
+                if (scorePlaceholder) scorePlaceholder.style.display = 'none';
+                if (timelinePlaceholder) timelinePlaceholder.style.display = 'none';
+            }
+        }
+        
+        // Render anomaly score distribution chart
+        function renderAnomalyScoreChart(bids) {
+            const ctx = document.getElementById('anomaly-score-chart');
+            if (!ctx) {
+                console.log('Canvas element anomaly-score-chart not found');
+                return;
+            }
+            
+            try {
+                // Clean up existing chart
+                if (anomalyScoreChart) {
+                    anomalyScoreChart.destroy();
+                }
+                
+                // Prepare data - create bins for histogram
+                const scores = bids.map(bid => bid.anomaly_score);
+                const bins = createHistogramBins(scores, 10);
+                
+                anomalyScoreChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: bins.labels,
+                    datasets: [{
+                        label: 'Number of Bids',
+                        data: bins.counts,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e2e8f0' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Anomaly Score',
+                                color: '#e2e8f0'
+                            },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Bids',
+                                color: '#e2e8f0'
+                            },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+            } catch (error) {
+                console.error('Error rendering anomaly score chart:', error);
+            }
+        }
+        
+        // Render anomaly scores timeline chart
+        function renderAnomalyTimelineChart(bids) {
+            const ctx = document.getElementById('anomaly-timeline-chart');
+            if (!ctx) return;
+            
+            // Clean up existing chart
+            if (anomalyTimelineChart) {
+                anomalyTimelineChart.destroy();
+            }
+            
+            // Prepare data
+            const chartData = bids.map(bid => ({
+                x: new Date(bid.submitted_at),
+                y: bid.anomaly_score,
+                suspicious: bid.is_suspicious
+            })).sort((a, b) => a.x - b.x);
+            
+            const normalBids = chartData.filter(point => !point.suspicious);
+            const suspiciousBids = chartData.filter(point => point.suspicious);
+            
+            anomalyTimelineChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Normal Bids',
+                        data: normalBids,
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        pointRadius: 4
+                    }, {
+                        label: 'Suspicious Bids',
+                        data: suspiciousBids,
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e2e8f0' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Submission Date',
+                                color: '#e2e8f0'
+                            },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Anomaly Score',
+                                color: '#e2e8f0'
+                            },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Helper function to create histogram bins
+        function createHistogramBins(data, numBins) {
+            if (data.length === 0) return { labels: [], counts: [] };
+            
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const binWidth = (max - min) / numBins;
+            
+            const bins = Array(numBins).fill(0);
+            const labels = [];
+            
+            // Create labels
+            for (let i = 0; i < numBins; i++) {
+                const start = min + i * binWidth;
+                const end = start + binWidth;
+                labels.push(`${start.toFixed(3)} - ${end.toFixed(3)}`);
+            }
+            
+            // Count data points in each bin
+            data.forEach(value => {
+                let binIndex = Math.floor((value - min) / binWidth);
+                if (binIndex >= numBins) binIndex = numBins - 1;
+                bins[binIndex]++;
+            });
+            
+            return { labels, counts: bins };
+        }
+        
+        // Update model training status
+        function updateModelTrainingStatus(bids) {
+            const totalBids = bids.length;
+            const canTrain = totalBids >= 10;
+            
+            // Update bid count
+            const totalBidsElement = document.getElementById('total-bids-count');
+            if (totalBidsElement) {
+                totalBidsElement.textContent = totalBids;
+            }
+            
+            // Update training ready status
+            const trainingReadyElement = document.getElementById('training-ready');
+            if (trainingReadyElement) {
+                trainingReadyElement.textContent = canTrain ? '✅ Yes' : '❌ No';
+                trainingReadyElement.style.color = canTrain ? '#10b981' : '#ef4444';
+            }
+            
+            // Update buttons
+            const trainButton = document.getElementById('train-button');
+            const testButton = document.getElementById('test-button');
+            const warningDiv = document.getElementById('insufficient-data-warning');
+            
+            if (canTrain) {
+                trainButton.disabled = false;
+                testButton.disabled = false;
+                warningDiv.style.display = 'none';
+            } else {
+                trainButton.disabled = true;
+                testButton.disabled = true;
+                warningDiv.style.display = 'block';
+            }
+        }
+        
+        // Investigate alert
+        async function investigateAlert(alertId) {
+            try {
+                // Get alert details
+                const alert = allAlerts.find(a => a.id === alertId);
+                
+                if (alert && alert.related_entity_type === 'bid') {
+                    // Get bid details
+                    const response = await fetch(`${API_BASE}/api/bids/${alert.related_entity_id}`);
+                    const bid = await response.json();
+                    
+                    // Show investigation modal (simplified)
+                    alert(`Investigation Results for Alert ${alertId}:\n\nBid Information:\n- Company: ${bid.company_name}\n- Amount: $${bid.bid_amount}\n- Anomaly Score: ${bid.anomaly_score || 'N/A'}\n\nAlert: ${alert.message}`);
+                } else {
+                    alert(`Investigation details for Alert ${alertId} - ${alert.message}`);
+                }
+            } catch (error) {
+                console.error('Error investigating alert:', error);
+                alert('Error loading investigation details');
+            }
+        }
+        
+        // Resolve alert
+        async function resolveAlert(alertId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/alerts/${alertId}/resolve`, {
+                    method: 'PUT'
+                });
+                
+                if (response.ok) {
+                    alert('Alert marked as resolved!');
+                    loadAIAnalysis(); // Refresh the alerts
+                } else {
+                    alert('Error resolving alert');
+                }
+            } catch (error) {
+                console.error('Error resolving alert:', error);
+                alert('Error resolving alert');
+            }
+        }
+        
+        // Train ML model
+        async function trainModel() {
+            if (confirm('Are you sure you want to train/retrain the ML model? This will analyze all existing bids.')) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/ml/train`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert(`Model trained successfully! Analyzed ${result.total_bids} bids and found ${result.suspicious_count} suspicious patterns.`);
+                        
+                        // Update model status
+                        const modelStatusElement = document.getElementById('model-status-value');
+                        if (modelStatusElement) {
+                            modelStatusElement.textContent = '✅ Trained';
+                            modelStatusElement.style.color = '#10b981';
+                        }
+                        
+                        // Show performance metrics
+                        document.getElementById('performance-metrics').style.display = 'block';
+                        
+                        // Reload AI analysis
+                        loadAIAnalysis();
+                    } else {
+                        alert('Error training model. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error training model:', error);
+                    alert('Error training model. Please try again.');
+                }
+            }
+        }
+        
+        // Test model performance
+        async function testModelPerformance() {
+            try {
+                const response = await fetch(`${API_BASE}/api/ml/test`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(`Model Performance Test:\n- Total Predictions: ${result.total_predictions}\n- Anomalies Detected: ${result.anomalies_detected}\n- Detection Rate: ${result.detection_rate}%`);
+                } else {
+                    alert('Error testing model performance');
+                }
+            } catch (error) {
+                console.error('Error testing model:', error);
+                alert('Error testing model performance');
+            }
+        }
+        
+        // Submit tender form
+        async function submitTender(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/tenders`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Tender submitted successfully!');
+                    event.target.reset();
+                    loadTenders();
+                    loadDashboardStats();
+                } else {
+                    alert('Error submitting tender: ' + result.detail);
+                }
+            } catch (error) {
+                console.error('Error submitting tender:', error);
+                alert('Error submitting tender. Please try again.');
+            }
+        }
+        
+        // Submit bid form
+        async function submitBid(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const bidData = {
+                tender_id: parseInt(formData.get('tender_id')),
+                company_name: formData.get('company_name'),
+                contact_email: formData.get('contact_email'),
+                bid_amount: parseFloat(formData.get('bid_amount')),
+                proposal: formData.get('proposal')
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/bids`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bidData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Bid submitted successfully!');
+                    event.target.reset();
+                    loadDashboardStats();
+                } else {
+                    alert('Error submitting bid: ' + result.detail);
+                }
+            } catch (error) {
+                console.error('Error submitting bid:', error);
+                alert('Error submitting bid. Please try again.');
+            }
+        }
+        
+        // Chat history storage
+        let chatHistory = [];
+        
+        // Initialize chat when page loads
+        function initializeChat() {
+            // Load system overview
+            loadSystemOverview();
+            
+            // Add welcome message if no history
+            if (chatHistory.length === 0) {
+                const welcomeMessage = {
+                    role: 'assistant',
+                    content: "👋 Hello! I'm the ACTMS AI Assistant. I'm here to help you with:\n\n- 📋 Understanding the tender management process\n- 📝 Guidance on bid submission\n- 🔍 Explaining AI analysis results\n- 🤖 System features and navigation\n- ❓ Answering questions about anti-corruption measures\n\nHow can I assist you today?",
+                    timestamp: new Date().toISOString(),
+                    metadata: { source: 'system', confidence: 1.0 }
+                };
+                chatHistory.push(welcomeMessage);
+                displayChatHistory();
+            }
+        }
+        
+        // Display chat history
+        function displayChatHistory() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+            
+            chatHistory.forEach((message, index) => {
+                addMessageToChat(message.content, message.role, message.metadata, false);
+            });
+            
+            // Update chat statistics
+            updateChatStatistics();
+        }
+        
+        // Load system overview
+        async function loadSystemOverview() {
+            try {
+                const [tendersResponse, bidsResponse, alertsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/tenders`),
+                    fetch(`${API_BASE}/api/bids`),
+                    fetch(`${API_BASE}/api/alerts`)
+                ]);
+                
+                const tenders = await tendersResponse.json();
+                const bids = await bidsResponse.json();
+                const alerts = await alertsResponse.json();
+                
+                document.getElementById('overview-tenders').textContent = tenders.length;
+                document.getElementById('overview-bids').textContent = bids.length;
+                document.getElementById('overview-alerts').textContent = alerts.length;
+                
+                const systemStatus = document.getElementById('system-status');
+                if (alerts.length > 0) {
+                    systemStatus.innerHTML = `⚠️ ${alerts.length} alerts need attention`;
+                    systemStatus.style.background = 'rgba(245, 158, 11, 0.2)';
+                    systemStatus.style.color = '#f59e0b';
+                } else {
+                    systemStatus.innerHTML = '✅ All systems normal';
+                    systemStatus.style.background = 'rgba(16, 185, 129, 0.2)';
+                    systemStatus.style.color = '#10b981';
+                }
+                
+            } catch (error) {
+                console.error('Error loading system overview:', error);
+            }
+        }
+        
+        // Chat functions
+        async function sendMessage(event) {
+            event.preventDefault();
+            
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to history
+            const userMessage = {
+                role: 'user',
+                content: message,
+                timestamp: new Date().toISOString()
+            };
+            chatHistory.push(userMessage);
+            
+            addMessageToChat(message, 'user', null, true);
+            input.value = '';
+            
+            // Show typing indicator
+            const typingMessage = addMessageToChat('🤔 Thinking...', 'agent', null, false);
+            
+            try {
+                // Prepare conversation context (last 10 messages)
+                const conversationContext = chatHistory.slice(-10).map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
+                
+                const response = await fetch(`${API_BASE}/api/chatbot`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        history: conversationContext.slice(0, -1) // Exclude the current message
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Remove typing indicator
+                typingMessage.remove();
+                
+                // Add assistant response to history
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: result.response,
+                    timestamp: new Date().toISOString(),
+                    metadata: {
+                        source: result.source || 'AI Assistant',
+                        confidence: result.confidence || 0.95
+                    }
+                };
+                chatHistory.push(assistantMessage);
+                
+                addMessageToChat(result.response, 'agent', assistantMessage.metadata, true);
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                // Remove typing indicator
+                typingMessage.remove();
+                
+                const errorMessage = {
+                    role: 'assistant',
+                    content: 'Sorry, I\'m having trouble responding right now. Please try again later.',
+                    timestamp: new Date().toISOString(),
+                    metadata: { source: 'error', confidence: 0.0 }
+                };
+                chatHistory.push(errorMessage);
+                
+                addMessageToChat(errorMessage.content, 'agent', errorMessage.metadata, true);
+            }
+        }
+        
+        // Handle quick actions
+        async function handleQuickAction(actionTitle) {
+            const userMessage = `Help me with: ${actionTitle}`;
+            
+            // Add to history
+            const userMsg = {
+                role: 'user',
+                content: userMessage,
+                timestamp: new Date().toISOString()
+            };
+            chatHistory.push(userMsg);
+            
+            addMessageToChat(userMessage, 'user', null, true);
+            
+            // Get automated response
+            try {
+                const response = await fetch(`${API_BASE}/api/chatbot`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                
+                const result = await response.json();
+                
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: result.response,
+                    timestamp: new Date().toISOString(),
+                    metadata: { source: 'Quick Action', confidence: 0.9 }
+                };
+                chatHistory.push(assistantMessage);
+                
+                addMessageToChat(result.response, 'agent', assistantMessage.metadata, true);
+                
+            } catch (error) {
+                console.error('Error with quick action:', error);
+            }
+        }
+        
+        function sendSuggestedQuestion(question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage({ preventDefault: () => {} });
+        }
+        
+        // Toggle suggested question categories
+        function toggleSuggestedCategory(categoryId) {
+            const category = document.getElementById(categoryId);
+            const arrow = document.getElementById(categoryId + '-arrow');
+            
+            if (category.style.display === 'none' || !category.style.display) {
+                category.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                category.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        function addMessageToChat(message, sender, metadata = null, updateStats = true) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: 600;">U</div>
+                        <div>
+                            <strong style="color: #8b5cf6;">You</strong>
+                            <small style="color: #64748b; margin-left: 8px;">${timestamp}</small>
+                        </div>
+                    </div>
+                    <p style="white-space: pre-wrap;">${message}</p>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: white; font-weight: 600;">A</div>
+                        <div>
+                            <strong style="color: #3b82f6;">Agent</strong>
+                            <small style="color: #64748b; margin-left: 8px;">${timestamp}</small>
+                        </div>
+                    </div>
+                    <p style="white-space: pre-wrap;">${message}</p>
+                    ${metadata && (metadata.source || metadata.confidence) ? `
+                        <div style="margin-top: 8px; padding: 8px; background: rgba(51, 65, 85, 0.3); border-radius: 6px; font-size: 12px; color: #94a3b8;">
+                            ${metadata.source ? `<strong>Source:</strong> ${metadata.source}` : ''}
+                            ${metadata.confidence ? `<br><strong>Confidence:</strong> ${(metadata.confidence * 100).toFixed(1)}%` : ''}
+                        </div>
+                    ` : ''}
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            if (updateStats) {
+                updateChatStatistics();
+            }
+            
+            return messageDiv;
+        }
+        
+        // Update chat statistics
+        function updateChatStatistics() {
+            const userMessages = chatHistory.filter(msg => msg.role === 'user').length;
+            const assistantMessages = chatHistory.filter(msg => msg.role === 'assistant').length;
+            
+            document.getElementById('user-message-count').textContent = userMessages;
+            document.getElementById('assistant-message-count').textContent = assistantMessages;
+            document.getElementById('total-exchanges').textContent = Math.min(userMessages, assistantMessages);
+            
+            // Show statistics if there are messages
+            const statsElement = document.getElementById('chat-statistics');
+            if (userMessages > 0 || assistantMessages > 0) {
+                statsElement.style.display = 'block';
+            }
+        }
+        
+        // Clear chat history
+        function clearChatHistory() {
+            if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
+                chatHistory = [];
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = '';
+                document.getElementById('chat-statistics').style.display = 'none';
+                
+                // Reinitialize with welcome message
+                initializeChat();
+                
+                alert('Chat history cleared!');
+            }
+        }
+        
+        // Export chat history
+        function exportChatHistory() {
+            if (chatHistory.length === 0) {
+                alert('No chat history to export');
+                return;
+            }
+            
+            try {
+                const exportData = {
+                    export_timestamp: new Date().toISOString(),
+                    total_messages: chatHistory.length,
+                    conversation: chatHistory
+                };
+                
+                const jsonString = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `actms_chat_history_${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('Chat history exported successfully!');
+                
+            } catch (error) {
+                console.error('Error exporting chat history:', error);
+                alert('Error exporting chat history');
+            }
+        }
+    </script>
+</body>
+</html>
